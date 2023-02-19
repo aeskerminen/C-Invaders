@@ -69,6 +69,7 @@ typedef struct Particle
 unsigned const int PLAYER_SPEED = 200;
 unsigned const int ENEMY_SPEED = 20;
 unsigned const int BULLET_SPEED = 275;
+const float SHOOT_COOLDOWN = 0.75f;
 
 // Enemy speed multiplier, used for increasing speed every time enemies change direciton
 float ENEMY_SPEED_MULT = 1.0f;
@@ -92,7 +93,7 @@ unsigned const int PARTICLE_HEIGHT = 20;
 // Player object
 Player player;
 
-// Global pointers for storing data of enemies, bullets and particles
+// Global pointers for storing enemies, bullets and particles
 Enemy* enemies[MAX_ENEMIES] = { NULL };
 Bullet* bullets[MAX_PROJECTILES] = { NULL };
 Particle* particles[MAX_PARTICLES] = { NULL };
@@ -107,8 +108,8 @@ Mix_Chunk* hit_sound = NULL;
 
 // Global pointers of the textures of the entities
 SDL_Texture* enemy_tex = NULL;
-SDL_Texture* particle_tex = NULL;
 SDL_Texture* bullet_tex = NULL;
+SDL_Texture* particle_textures[2];
 
 // Global pointer for the game and menu font 
 TTF_Font* game_font;
@@ -180,6 +181,13 @@ int main(int argc, char* argv[])
 
 	atexit(exitProgram);
 
+	// Load textures
+	enemy_tex = IMG_LoadTexture(renderer, "enemy.png");
+	bullet_tex = IMG_LoadTexture(renderer, "bullet.png");
+	particle_textures[0] = IMG_LoadTexture(renderer, "bullet_destroy_particle.png");
+	particle_textures[1] = IMG_LoadTexture(renderer, "ship_destroy_particle.png");
+
+
 	SDL_Event event;
 	bool quit = false;
 
@@ -249,9 +257,6 @@ bool init(void)
 	shoot_sound = Mix_LoadWAV("shoot_sound.wav");
 	hit_sound = Mix_LoadWAV("hit_sound.wav");
 
-	enemy_tex = IMG_LoadTexture(renderer, "enemy.png");
-	bullet_tex = IMG_LoadTexture(renderer, "bullet.png");
-
 	// Create a window and a renderer
 	window = SDL_CreateWindow("Space Invaders", SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, WINDOW_WIDTH, WINDOW_HEIGHT, 0);
 	renderer = SDL_CreateRenderer(window, -1, SDL_RENDERER_ACCELERATED | SDL_RENDERER_PRESENTVSYNC);
@@ -276,7 +281,7 @@ void exitProgram(void)
 	TTF_CloseFont(game_font);
 
 	SDL_DestroyTexture(enemy_tex);
-	SDL_DestroyTexture(particle_tex);
+	SDL_DestroyTexture(particle_textures);
 	SDL_DestroyTexture(bullet_tex);
 
 	Mix_FreeChunk(hit_sound);
@@ -459,7 +464,7 @@ void enemyShoot(float delta)
 
 					Mix_PlayChannel(-1, shoot_sound, 0);
 
-					enemies[index]->shootTimer = 1;
+					enemies[index]->shootTimer = SHOOT_COOLDOWN;
 				}
 
 				enemies[index]->shootTimer -= delta;
@@ -690,7 +695,7 @@ void checkGameState(Player* player)
 	// If no more enemies exist, spawn a new wave
 	bool spawnNextWave = true;
 	for (unsigned int i = 0; i < MAX_ENEMIES; i++)
-		if (enemies[i] != NULL) spawnNextWave = false;
+		if (enemies[i] != NULL) { spawnNextWave = false; break; }
 
 	// Increment wave counter and spawn new enemies. Reset player lives to three.
 	if (spawnNextWave)
@@ -739,7 +744,7 @@ void renderEntities(void)
 	SDL_SetRenderDrawColor(renderer, 255, 255, 255, 255);
 
 	// Create rectangle based on the player's coordinates and size
-	SDL_Rect rect = {
+	SDL_Rect player_rect = {
 		.x = (int)player.px,
 		.y = (int)player.py,
 		.w = PLAYER_WIDTH,
@@ -747,77 +752,63 @@ void renderEntities(void)
 	};
 
 	// Render given rectangle
-	SDL_RenderFillRect(renderer, &rect);
+	SDL_RenderFillRect(renderer, &player_rect);
 
-	enemy_tex = IMG_LoadTexture(renderer, "enemy.png");
+	// Base rect for enemy
+	SDL_Rect enemy_rect = {
+		.w = ENEMY_HEIGHT,
+		.h = ENEMY_WIDTH
+	};
 
 	for (unsigned int i = 0; i < MAX_ENEMIES; i++)
 	{
 		// If enemy exists...
 		if (enemies[i] != NULL)
 		{
-			// Create rectangle based on the coordinates and size of the enemy
-			SDL_Rect rect = {
-			.x = (int)enemies[i]->px,
-			.y = (int)enemies[i]->py,
-			.w = ENEMY_HEIGHT,
-			.h = ENEMY_WIDTH
-			};
+			enemy_rect.x = (int)enemies[i]->px;
+			enemy_rect.y = (int)enemies[i]->py;
 
 			// Render the given enemy texture at the coordinates of the given rectangle
-			SDL_RenderCopy(renderer, enemy_tex, NULL, &rect);
+			SDL_RenderCopy(renderer, enemy_tex, NULL, &enemy_rect);
 		}
 	}
 
-	bullet_tex = IMG_LoadTexture(renderer, "bullet.png");
+	// Base rect for bullet
+	SDL_Rect bullet_rect = {
+	.w = BULLET_WIDTH,
+	.h = BULLET_HEIGHT
+	};
 
 	for (unsigned int i = 0; i < MAX_PROJECTILES; i++)
 	{
 		// If bullet exists...
 		if (bullets[i] != NULL)
 		{
-			// Create rectangle based on the coordinates and size of the bullet
-			SDL_Rect rect = {
-			.x = (int)bullets[i]->px,
-			.y = (int)bullets[i]->py,
-			.w = BULLET_WIDTH,
-			.h = BULLET_HEIGHT
-			};
+			// Add proper coordinates
+			bullet_rect.x = (int)bullets[i]->px,
+			bullet_rect.y = (int)bullets[i]->py,
 
 			// Render rectangle
-			SDL_RenderCopy(renderer, bullet_tex, NULL, &rect);
+			SDL_RenderCopy(renderer, bullet_tex, NULL, &bullet_rect);
 		}
 	}
+
+	// Base rect for particle
+	SDL_Rect particle_rect = {
+		.w = PARTICLE_WIDTH,
+		.h = PARTICLE_HEIGHT
+	};
 
 	for(unsigned int i = 0; i < MAX_PARTICLES; i++) 
 	{
 		if(particles[i] != NULL) 
 		{
-			SDL_Rect rect = {
-			.x = (int)particles[i]->px,
-			.y = (int)particles[i]->py,
-			.w = PARTICLE_WIDTH,
-			.h = PARTICLE_HEIGHT
-			};
+			particle_rect.x = (int)particles[i]->px;
+			particle_rect.y = (int)particles[i]->py;
 
-			switch (particles[i]->particleType)
-			{
-				case BULLET_EXPLOSION:
-					particle_tex = IMG_LoadTexture(renderer, "bullet_destroy_particle.png");
-					break;
-				case SHIP_EXPLOSION:
-					particle_tex = IMG_LoadTexture(renderer, "ship_destroy_particle.png");
-					break;
-			}
-
-			SDL_RenderCopy(renderer, particle_tex, NULL, &rect);
+			SDL_RenderCopy(renderer, particle_textures[particles[i]->particleType], NULL, &particle_rect);
 		}
 	}
-
-	// Free memory
-	SDL_DestroyTexture(particle_tex);
-	SDL_DestroyTexture(enemy_tex);
-	SDL_DestroyTexture(bullet_tex);
 }
 
 // Helper function for drawing text
@@ -839,6 +830,7 @@ void drawText(const char* text, TTF_Font* font, SDL_Color color, int px, int py)
 	// Free memory used by the surface and the texture
 	SDL_FreeSurface(textSurface);
 	SDL_DestroyTexture(textTexture);
+
 }
 
 // Free memory used by enemies
