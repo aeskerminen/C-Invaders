@@ -75,20 +75,20 @@ const float SHOOT_COOLDOWN = 0.75f;
 float ENEMY_SPEED_MULT = 1.0f;
 
 // Player size
-unsigned const int PLAYER_WIDTH = 20;
-unsigned const int PLAYER_HEIGHT = 20;
+const float PLAYER_WIDTH = 20.0f;
+const float PLAYER_HEIGHT = 20.0f;
 
 // Enemy size
-unsigned const int ENEMY_WIDTH = 30;
-unsigned const int ENEMY_HEIGHT = 30;
+const float ENEMY_WIDTH = 30;
+const float ENEMY_HEIGHT = 30;
 
 // Bullet (projectile) size
-unsigned const int BULLET_WIDTH = 10;
-unsigned const int BULLET_HEIGHT = 15;
+const float BULLET_WIDTH = 10;
+const float BULLET_HEIGHT = 15;
 
 // Particle size
-unsigned const int PARTICLE_WIDTH = 20;
-unsigned const int PARTICLE_HEIGHT = 20;
+const float PARTICLE_WIDTH = 20;
+const float PARTICLE_HEIGHT = 20;
 
 // Player object
 Player player;
@@ -870,7 +870,7 @@ void renderMenu(void)
 	drawText("SPACE INVADERS", menu_font, white, WINDOW_WIDTH / 2 - 270, 35);
 
 	// Draw button text
-	drawText("Press space to play", menu_font, white, WINDOW_WIDTH / 2 - 85, WINDOW_HEIGHT / 2 - 35);	
+	drawText("Press space to play", menu_font, white, WINDOW_WIDTH / 2 - 290, WINDOW_HEIGHT / 2 - 35);	
 }
 
 void checkGameStart(void) 
