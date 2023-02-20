@@ -33,6 +33,7 @@ typedef struct Player
 	float shootTimer; // Cooldown for shooting bullets
 } Player;
 
+
 typedef struct Bullet
 {
 	float px, py; // Coordinates
@@ -64,6 +65,12 @@ typedef struct Particle
 #define MAX_ENEMIES 55
 #define MAX_PROJECTILES 20
 #define MAX_PARTICLES 20
+
+// Speed offset
+#define BASE_ENEMY_SPEED_OFFSET 0.0f;
+float ENEMY_SPEED_OFFSET = BASE_ENEMY_SPEED_OFFSET;
+const float ENEMY_SPEED_OFFSET_INCR = 1.25f;
+
 
 // Speed variables for all entities
 unsigned const int PLAYER_SPEED = 200;
@@ -411,21 +418,10 @@ void updateEnemies(float delta)
 		{
 			// Move right if 1, else left
 			if (enemyDir == 1)
-				enemies[i]->px += (float)ENEMY_SPEED * ENEMY_SPEED_MULT * delta;
+				enemies[i]->px += ((float)ENEMY_SPEED + ENEMY_SPEED_OFFSET) * ENEMY_SPEED_MULT * delta;
 			else
-				enemies[i]->px -= (float)ENEMY_SPEED * ENEMY_SPEED_MULT * delta;
+				enemies[i]->px -= ((float)ENEMY_SPEED + ENEMY_SPEED_OFFSET) * ENEMY_SPEED_MULT * delta;
 
-			// If enemies get too close to player, end the game
-			if (enemies[i]->py > WINDOW_HEIGHT - PLAYER_HEIGHT * 2 - ENEMY_HEIGHT)
-				gameOver = true;
-		}
-	}
-
-	for (unsigned int i = 0; i < MAX_ENEMIES; i++)
-	{
-		// if enemy exists...
-		if (enemies[i] != NULL)
-		{
 			// If an enemy is too close to either edge, change to direction of every enemey
 			if (enemies[i]->px < 0 + (ENEMY_WIDTH) || enemies[i]->px > WINDOW_WIDTH - (2 * ENEMY_WIDTH))
 			{
@@ -436,12 +432,13 @@ void updateEnemies(float delta)
 				for (unsigned int i = 0; i < MAX_ENEMIES; i++)
 					if (enemies[i] != NULL)
 						enemies[i]->py += ENEMY_HEIGHT / 4;
-				
-				ENEMY_SPEED_MULT += 0.025f;
 
-				// break so that this procedure only happens once
-				break;
+				//ENEMY_SPEED_MULT += 0.025f;
 			}
+
+			// If enemies get too close to player, end the game
+			if (enemies[i]->py > WINDOW_HEIGHT - PLAYER_HEIGHT * 2 - ENEMY_HEIGHT)
+				gameOver = true;
 		}
 	}
 }
@@ -631,6 +628,8 @@ void checkBulletCollisions(Player* player)
 
 							createParticle(particle);
 
+							ENEMY_SPEED_OFFSET += ENEMY_SPEED_OFFSET_INCR;
+
 							free(enemies[j]);
 							enemies[j] = NULL;
 
@@ -692,6 +691,8 @@ void checkGameState(Player* player)
 
 		createEnemies();
 
+		ENEMY_SPEED_OFFSET = BASE_ENEMY_SPEED_OFFSET;
+
 		gameOver = false;
 	}
 	
@@ -709,6 +710,7 @@ void checkGameState(Player* player)
 		createEnemies();
 
 		player->livesLeft = 3;
+		ENEMY_SPEED_OFFSET = BASE_ENEMY_SPEED_OFFSET;
 	}
 }
 
