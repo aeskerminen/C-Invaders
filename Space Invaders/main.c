@@ -743,8 +743,8 @@ void renderStats(void)
 // Function for rendering every type of entity in the game
 void renderEntities(void) 
 {
-	// Set drawcolor to white
-	SDL_SetRenderDrawColor(renderer, 255, 255, 255, 255);
+	// Set drawcolor to green
+	SDL_SetRenderDrawColor(renderer, 0, 255, 0, 255);
 
 	// Create rectangle based on the player's coordinates and size
 	SDL_Rect player_rect = {
@@ -756,6 +756,9 @@ void renderEntities(void)
 
 	// Render given rectangle
 	SDL_RenderFillRect(renderer, &player_rect);
+
+	// Set drawcolor to white
+	SDL_SetRenderDrawColor(renderer, 255, 255, 255, 255);
 
 	// Base rect for enemy
 	SDL_Rect enemy_rect = {
