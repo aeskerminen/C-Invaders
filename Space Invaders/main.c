@@ -69,7 +69,10 @@ typedef struct Particle
 unsigned const int PLAYER_SPEED = 200;
 unsigned const int ENEMY_SPEED = 20;
 unsigned const int BULLET_SPEED = 275;
+
+// Shooting
 const float SHOOT_COOLDOWN = 0.75f;
+const float PLAYER_SHOOT_OFFSET = 1.30f;
 
 // Enemy speed multiplier, used for increasing speed every time enemies change direciton
 float ENEMY_SPEED_MULT = 1.0f;
@@ -372,7 +375,7 @@ void updatePlayer(Player* player, float delta)
 		}
 	}
 
-	player->shootTimer -= delta;
+	player->shootTimer -= delta * PLAYER_SHOOT_OFFSET;
 }
 
 // Function for creating a new set of enemies
