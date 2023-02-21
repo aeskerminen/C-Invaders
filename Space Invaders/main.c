@@ -318,13 +318,14 @@ void update(float delta)
 	{
 		updatePlayer(&player, delta);
 		updateBullets(delta);
-		updateEnemies(delta);
 		updateParticles(delta);
 
 		enemyShoot(delta);
 
 		checkBulletCollisions(&player);
 		checkGameState(&player);
+
+		updateEnemies(delta);
 
 		renderStats();
 		renderEntities();
@@ -411,6 +412,7 @@ void createEnemies(void)
 // Function for updating enemies
 void updateEnemies(float delta)
 {
+	bool moveDown = false;
 	for (unsigned int i = 0; i < MAX_ENEMIES; i++)
 	{
 		// If enemy exists...
@@ -423,23 +425,25 @@ void updateEnemies(float delta)
 				enemies[i]->px -= ((float)ENEMY_SPEED + ENEMY_SPEED_OFFSET) * ENEMY_SPEED_MULT * delta;
 
 			// If an enemy is too close to either edge, change to direction of every enemey
-			if (enemies[i]->px < 0 + (ENEMY_WIDTH) || enemies[i]->px > WINDOW_WIDTH - (2 * ENEMY_WIDTH))
+			if (enemies[i]->px < 0 + (ENEMY_WIDTH) || enemies[i]->px > WINDOW_WIDTH -  (ENEMY_WIDTH))
 			{
-				// Inverse direction
-				enemyDir = -enemyDir;
-
-				// Move enemies down by 1/4 of their height
-				for (unsigned int i = 0; i < MAX_ENEMIES; i++)
-					if (enemies[i] != NULL)
-						enemies[i]->py += ENEMY_HEIGHT / 4;
-
-				//ENEMY_SPEED_MULT += 0.025f;
+				moveDown = !moveDown;
 			}
 
 			// If enemies get too close to player, end the game
 			if (enemies[i]->py > WINDOW_HEIGHT - PLAYER_HEIGHT * 2 - ENEMY_HEIGHT)
 				gameOver = true;
 		}
+	}
+
+	if (moveDown) {
+		// Inverse direction
+		enemyDir = -enemyDir;
+
+		// Move enemies down by 1/4 of their height
+		for (unsigned int i = 0; i < MAX_ENEMIES; i++)
+			if (enemies[i] != NULL)
+				enemies[i]->py += ENEMY_HEIGHT / 4;
 	}
 }
 
