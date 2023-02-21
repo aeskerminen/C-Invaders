@@ -256,6 +256,9 @@ bool init(void)
 		success = false;
 	}
 
+	// Lower mixer volume
+	Mix_Volume(-1, 64);
+
 	// Set render scale quality to 0 for the crispiest pixel art
 	SDL_SetHint(SDL_HINT_RENDER_SCALE_QUALITY, "0");
 
